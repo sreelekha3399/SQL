@@ -120,5 +120,30 @@ from sales s
 join menu m on s.product_id=m.product_id
 join members m1 on s.customer_id=m1.customer_id
 where order_date<="2021-01-31"
-group by s.customer_id
+group by s.customer_id;
+
+-- Member or not
+select s.customer_id, order_date, product_name, price,
+case when order_date<join_date or join_date is null then "N"
+else "Y"
+end as member
+from Sales s
+join menu m on s.product_id = m.product_id
+left join members m1 on s.customer_id=m1.customer_id;
+
+-- Assignem Rankings for only members and null for non-members
+with t_member as (select s.customer_id, order_date, product_name, price,
+case when order_date<join_date or join_date is null then "N"
+else "Y"
+end as member
+from Sales s
+join menu m on s.product_id = m.product_id
+left join members m1 on s.customer_id=m1.customer_id)
+
+select customer_id, order_date, product_name, price,
+case when member="N" then null
+else rank() over (partition by customer_id,member order by order_date asc) 
+end as ranking
+from t_member;
+
 
